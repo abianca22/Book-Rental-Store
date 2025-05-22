@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Rentals</title>
+    <script src="/webjars/jquery/3.7.1/jquery.min.js"></script>
+    <script src="/webjars/bootstrap/5.3.3/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/webjars/bootstrap/5.3.3/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/webjars/font-awesome/6.5.2/css/all.min.css"/>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .table th, .table td {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" th:href="@{'/home'}">
+                <i class="fas fa-book"></i> Library
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{'/books'}">Books</a>
+                    </li>
+                    <li class="nav-item" th:if="${authenticated}">
+                        <a class="nav-link" th:href="@{'/rentals'}">Rentals</a>
+                    </li>
+                    <li class="nav-item" th:if="${authenticated && currentUserRole != 'client'}">
+                        <a class="nav-link" th:href="@{'/users'}">Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{'/categories'}">Categories</a>
+                    </li>
+                    <li class="nav-item" th:if="${authenticated}">
+                        <a class="nav-link" th:href="@{'/users/profile'}">Profile</a>
+                    </li>
+                    <li class="nav-item" th:if="${authenticated}">
+                        <form th:action="@{'/logout'}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-outline-dark">Logout</button>
+                        </form>
+                    </li>
+                    <li class="nav-item" th:if="${!authenticated}">
+                        <a class="btn btn-outline-dark" th:href="@{'/login'}">Sign in</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
+<div class="content-wrapper">
+    <div class="container">
+        <p class="text-secondary mt-3" th:if="${currentUserRole == 'client'}">
+            Nota: You can extend your rental only until the due date.
+        </p>
+
+        <form th:action="@{/rentals}" method="get" class="row g-3 mb-4 mt-1">
+            <div class="col-md-3">
+                <input type="text" name="keyword" class="form-control" placeholder="Search" th:value="${keyword}">
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option th:value="__${null}__" th:selected="${status == null}">All</option>
+                    <option th:value="returned" th:selected="${status == 'returned'}">Returned</option>
+                    <option th:value="not_returned" th:selected="${status == 'not_returned'}">Not returned</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="startDateFrom" class="form-control" th:value="${startDateFrom}">
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="startDateTo" class="form-control" th:value="${startDateTo}">
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+            <div class="col-md-2">
+                <a th:href="@{/rentals}" class="btn btn-secondary w-100">Reset</a>
+            </div>
+        </form>
+
+        <div class="card p-4">
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Rental ID</th>
+                        <th>Book</th>
+                        <th th:if="${currentUserRole != 'client'}">Client</th>
+                        <th>Rental employee</th>
+                        <th>Return employee</th>
+                        <th>Rental date</th>
+                        <th>Return date</th>
+                        <th>Total amount</th>
+                        <th>Status</th>
+                        <th th:colspan="${currentUserRole == 'client' ? 1 : 4}">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="rental, stat : ${rentals.content}" th:class="${stat.odd}? 'table-light'">
+                        <td th:text="${rental.id}"></td>
+                        <td><p th:if="${rental.book != null}" th:text="${rental.book.title}">Book</p></td>
+                        <td th:if="${currentUserRole != 'client' && rental.client != null}" th:text="${rental.client.username}"></td>
+                        <td th:if="${currentUserRole != 'client' && rental.client == null}">-</td>
+                        <td th:if="${rental.employee != null}" th:text="${rental.employee.username}"></td>
+                        <td th:if="${rental.employee == null}">-</td>
+                        <td th:if="${rental.associatedReturn != null && rental.associatedReturn.employee != null}" th:text="${rental.associatedReturn.employee.username}"></td>
+                        <td th:if="${rental.associatedReturn == null || rental.associatedReturn.employee == null}">-</td>
+                        <td th:text="${rental.startDate}"></td>
+                        <td th:text="${rental.dueDate}"></td>
+                        <td th:text="${rental.totalPrice}"></td>
+                        <td>
+                            <p class="text-success" th:if="${rental.associatedReturn != null}">
+                                Returned (<span th:text="${rental.associatedReturn.returnDate}"></span>)
+                            </p>
+                            <p class="text-danger" th:if="${rental.associatedReturn == null}">Not returned</p>
+                        </td>
+                        <td th:if="${rental.client != null && rental.client.id == currentUserId}">
+                            <form method="post" th:if="${!rental.pendingRequest && rental.associatedReturn == null && rental.dueDate >= today}"
+                                  th:action="@{/rentals/editClient/{id}(id=${rental.id})}">
+                                <button class="btn btn-primary text-white" type="submit">Extend</button>
+                            </form>
+                            <p class="text-info" th:if="${rental.pendingRequest}">Pending request</p>
+                        </td>
+                        <td th:if="${(rental.client == null || currentUserId != rental.client.id) && currentUserRole != 'client'}"></td>
+                        <td th:if="${currentUserRole != 'client'}">
+                            <form method="post" th:if="${rental.associatedReturn == null && (currentUserRole == 'admin' || (currentUserRole == 'employee' && rental.employee.id == currentUserId))}"
+                                  th:action="@{/returns/{id}(id=${rental.id})}">
+                                <button class="btn btn-success" type="submit">Return</button>
+                            </form>
+                        </td>
+                        <td th:if="${currentUserRole != 'client'}">
+                            <form method="post" th:if="${rental.pendingRequest && (currentUserRole == 'admin' || (currentUserRole == 'employee' && rental.employee != null && rental.employee.id == currentUserId))}"
+                                  th:action="@{/rentals/edit/{id}(id=${rental.id})}" th:object="${rental}">
+                                <button class="btn btn-success" type="submit">Approve extension request</button>
+                            </form>
+                        </td>
+                        <td th:if="${currentUserRole != 'client'}">
+                            <a class="btn btn-warning text-white"
+                               th:if="${rental.associatedReturn == null && currentUserRole == 'admin'}"
+                               th:href="@{/rentals/edit/{id}(id=${rental.id})}">
+                                Change employee
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <nav th:if="${rentals.totalPages > 0}" aria-label="Paginare">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" th:if="${currentPage > 1}">
+                    <a class="page-link"
+                       th:href="@{/rentals(size=${rentals.size}, page=${currentPage - 1}, keyword=${keyword}, status=${status}, startDateFrom=${startDateFrom}, startDateTo=${startDateTo})}">
+                        Previous
+                    </a>
+                </li>
+                <li th:each="pageNumber : ${#numbers.sequence(1, T(java.lang.Math).min(7, rentals.totalPages))}"
+                    th:class="${pageNumber == currentPage} ? 'page-item active' : 'page-item'">
+                    <a class="page-link"
+                       th:text="${pageNumber}"
+                       th:href="@{/rentals(size=${rentals.size}, page=${pageNumber}, keyword=${keyword}, status=${status}, startDateFrom=${startDateFrom}, startDateTo=${startDateTo})}">
+                    </a>
+                </li>
+                <li class="page-item" th:if="${rentals.totalPages > 6}">
+                    <a class="page-link" href="#">...</a>
+                </li>
+                <li class="page-item" th:if="${currentPage < rentals.totalPages}">
+                    <a class="page-link"
+                       th:href="@{/rentals(size=${rentals.size}, page=${currentPage + 1}, keyword=${keyword}, status=${status}, startDateFrom=${startDateFrom}, startDateTo=${startDateTo})}">
+                        Next
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+</body>
+</html>

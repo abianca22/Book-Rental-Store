@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Books List</title>
+    <script src="/webjars/jquery/3.7.1/jquery.min.js"></script>
+    <script src="/webjars/bootstrap/5.3.3/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/webjars/bootstrap/5.3.3/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/webjars/font-awesome/6.5.2/css/all.min.css"/>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .jumbotron {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 2rem 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" th:href="@{'/home'}">
+                <i class="fas fa-book"></i> Library
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{'/books'}">Books</a>
+                    </li>
+                    <li class="nav-item" th:if="${authenticated}">
+                        <a class="nav-link" th:href="@{'/rentals'}">Rentals</a>
+                    </li>
+                    <li class="nav-item" th:if="${authenticated && currentUserRole != 'client'}">
+                        <a class="nav-link" th:href="@{'/users'}">Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{'/categories'}">Categories</a>
+                    </li>
+                    <li class="nav-item" th:if="${authenticated}">
+                        <a class="nav-link" th:href="@{'/users/profile'}">Profile</a>
+                    </li>
+                    <li class="nav-item" th:if="${authenticated}">
+                        <form th:action="@{'/logout'}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-outline-dark">Logout</button>
+                        </form>
+                    </li>
+                    <li class="nav-item" th:if="${!authenticated}">
+                        <a class="btn btn-outline-dark" th:href="@{'/login'}">Sign in</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
+<div class="content-wrapper">
+    <div class="container">
+        <div th:if="${error}" class="alert alert-danger">
+            <span th:text="${error}">Error message</span>
+        </div>
+        <div class="jumbotron text-center bg-light p-4 mb-4">
+            <h1 class="display-4">Books</h1>
+        </div>
+        <form method="get" th:action="@{/books}" class="row mb-4">
+            <div class="col-md-3">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" id="search" name="search" class="form-control"
+                       th:value="${search}" placeholder="Title or author">
+            </div>
+            <div class="col-md-3" th:if="${authenticated && currentUserRole != 'client'}">
+                <label for="available" class="form-label">Disponibilitate</label>
+                <select id="available" name="available" class="form-select">
+                    <option th:value="__${null}__" th:selected="${available == null}">All</option>
+                    <option th:value="true" th:selected="${available == true}">Available</option>
+                    <option th:value="false" th:selected="${available == false}">Unavailable</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="categoryId" class="form-label">Category</label>
+                <select id="categoryId" name="categoryId" class="form-select">
+                    <option th:value="__${null}__" th:selected="${filteredCategoryId == null}">All</option>
+                    <option th:each="cat : ${categories}"
+                            th:value="${cat.id}"
+                            th:text="${cat.name}"
+                            th:selected="${filteredCategoryId == cat.id}">
+                    </option>
+                </select>
+            </div>
+            <input type="hidden" name="page" th:value="${currentPage}" />
+            <input type="hidden" name="size" th:value="${size}" />
+            <input type="hidden" name="sortField" th:value="${sortField}" />
+            <input type="hidden" name="sortDir" th:value="${sortDir}" />
+            <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary me-2">Filter</button>
+                <a th:href="@{/books(page=${currentPage}, size=${size}, sortField=${sortField}, sortDir=${sortDir})}"
+                   class="btn btn-secondary">Reset</a>
+            </div>
+        </form>
+        <div class="row mb-4">
+            <div class="col-md-12 d-flex justify-content-end">
+                <a th:if="${authenticated && currentUserRole != 'client'}" href="/books/form" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Add Book
+                </a>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <form id="sizeForm" method="get" th:action="@{/books}">
+                    <div class="input-group">
+                        <label class="input-group-text" for="sizeSelect">Items / page</label>
+                        <select class="form-select" id="sizeSelect" name="size"
+                                onchange="document.getElementById('sizeForm').submit()">
+                            <option th:value="5" th:selected="${bookPage.size == 5}">5</option>
+                            <option th:value="10" th:selected="${bookPage.size == 10}">10</option>
+                            <option th:value="20" th:selected="${bookPage.size == 20}">20</option>
+                            <option th:value="50" th:selected="${bookPage.size == 50}">50</option>
+                        </select>
+                        <input type="hidden" name="page" id="pageInput" value="1" />
+                        <input type="hidden" name="categoryId" th:value="${filteredCategoryId}"/>
+                        <input type="hidden" name="available" th:value="${available}"/>
+                        <input type="hidden" name="search" th:value="${search}"/>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>
+                    <a th:href="@{/books(page=1, size=${bookPage.size}, sortField='title', sortDir=${sortField == 'title' ? reverseSortDir : 'asc'}, categoryId=${filteredCategoryId}, available=${available}, search=${search})}"
+                       class="text-dark text-decoration-none">
+                        Title
+                        <i class="fa"
+                           th:classappend="${sortField == 'title'} ? (${sortDir == 'asc'} ? ' fa-sort-up' : ' fa-sort-down') : ' fa-sort'"></i>
+                    </a>
+                </th>
+                <th>
+                    <a th:href="@{/books(page=1, size=${bookPage.size}, sortField='author', sortDir=${sortField == 'author' ? reverseSortDir : 'asc'}, categoryId=${filteredCategoryId}, available=${available}, search=${search})}"
+                       class="text-dark text-decoration-none">
+                        Author
+                        <i class="fa"
+                           th:classappend="${sortField == 'author'} ? (${sortDir == 'asc'} ? ' fa-sort-up' : ' fa-sort-down') : ' fa-sort'"></i>
+                    </a>
+                </th>
+                <th>Category</th>
+                <th>
+                    <a th:href="@{/books(page=1, size=${bookPage.size}, sortField='rentalPrice', sortDir=${sortField == 'rentalPrice' ? reverseSortDir : 'asc'}, categoryId=${filteredCategoryId}, available=${available}, search=${search})}"
+                       class="text-dark text-decoration-none">
+                        Price
+                        <i class="fa"
+                           th:classappend="${sortField == 'rentalPrice'} ? (${sortDir == 'asc'} ? ' fa-sort-up' : ' fa-sort-down') : ' fa-sort'"></i>
+                    </a>
+                </th>
+                <th>Description</th>
+                <th th:colspan="${authenticated ? 4 : 1}">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="book, stat : ${bookPage.content}" th:class="${stat.odd}? 'table-light' : ''">
+                <td th:text="${book.title}">Title</td>
+                <td th:text="${book.author}">Author</td>
+                <td><p th:if="${book.categories != null && !book.categories.isEmpty()}" th:each="categ: ${book.categories}" th:text="${categ.name}">Category</p></td>
+                <td th:text="${book.rentalPrice}">Price</td>
+                <td th:text="${book.description}">Description</td>
+                <td th:if="${authenticated && currentUserRole != 'client'}">
+                    <a th:href="@{/books/edit/{id}(id=${book.id})}" class="btn btn-primary">Edit</a>
+                </td>
+                <td th:if="${authenticated && currentUserRole != 'client'}">
+                    <form method="post" th:action="@{/books/delete/{id}(id=${book.id})}">
+                        <input type="hidden" name="_method" value="delete"/>
+                        <button class="btn btn-danger" type="submit">Delete</button>
+                    </form>
+                </td>
+                <td th:if="${authenticated && currentUserRole != 'client'}">
+                    <a th:href="@{/books/rent/{id}(id=${book.id})}" th:if="${book.status}" class="btn btn-info text-white">Rental</a>
+                    <p th:if="${!book.status}" class="text-danger">Unavailable for rental</p>
+                </td>
+                <td>
+                    <a th:href="@{/books/{id}(id=${book.id})}" class="btn btn-info text-white">Details</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <nav th:if="${bookPage.totalPages > 0}" aria-label="Paginare">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" th:if="${currentPage > 1}">
+                    <a class="page-link"
+                       th:href="@{/books(size=${bookPage.size}, page=${currentPage - 1}, sortField=${sortField}, sortDir=${sortDir}, categoryId=${filteredCategoryId}, available=${available}, search=${search})}">
+                        Previous
+                    </a>
+                </li>
+                <li th:each="pageNumber : ${#numbers.sequence(1, T(java.lang.Math).min(7,bookPage.totalPages))}"
+                    th:class="${pageNumber == currentPage} ? 'page-item active' : 'page-item'">
+                    <a class="page-link"
+                       th:text="${pageNumber}"
+                       th:href="@{/books(size=${bookPage.size}, page=${pageNumber}, sortField=${sortField}, sortDir=${sortDir}, categoryId=${filteredCategoryId}, available=${available}, search=${search})}">
+                    </a>
+                </li>
+                <li class="page-item" th:if="${bookPage.totalPages > 6}">
+                    <a class="page-link" href="#">...</a>
+                </li>
+                <li class="page-item" th:if="${currentPage < bookPage.totalPages}">
+                    <a class="page-link"
+                       th:href="@{/books(size=${bookPage.size}, page=${currentPage + 1}, sortField=${sortField}, sortDir=${sortDir}, categoryId=${filteredCategoryId}, available=${available}, search=${search})}">
+                        Next
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+<script>
+    document.getElementById("sizeSelect").addEventListener("change", function () {
+        document.getElementById("pageInput").value = 1;
+        document.getElementById("sizeForm").submit();
+    });
+</script>
+</body>
+</html>

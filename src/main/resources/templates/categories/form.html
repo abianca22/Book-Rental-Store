@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Formular Categorie</title>
+  <script src="/webjars/jquery/3.7.1/jquery.min.js"></script>
+  <script src="/webjars/bootstrap/5.3.3/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="/webjars/bootstrap/5.3.3/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="/webjars/font-awesome/6.5.2/css/all.min.css"/>
+  <style>
+    body {
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .card {
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .btn-primary {
+      background-color: #007bff;
+      border-color: #007bff;
+    }
+    .btn-primary:hover {
+      background-color: #0056b3;
+      border-color: #004085;
+    }
+    .content-wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" th:href="@{'/home'}">
+      <i class="fas fa-book"></i> Library
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" th:href="@{'/books'}">Books</a>
+        </li>
+        <li class="nav-item" th:if="${authenticated}">
+          <a class="nav-link" th:href="@{'/rentals'}">Rentals</a>
+        </li>
+        <li class="nav-item" th:if="${authenticated && currentUserRole != 'client'}">
+          <a class="nav-link" th:href="@{'/users'}">Users</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" th:href="@{'/categories'}">Categories</a>
+        </li>
+        <li class="nav-item" th:if="${authenticated}">
+          <a class="nav-link" th:href="@{'/users/profile'}">Profile</a>
+        </li>
+        <li class="nav-item" th:if="${authenticated}">
+          <form th:action="@{'/logout'}" method="post" class="d-inline">
+            <button type="submit" class="btn btn-outline-dark">Logout</button>
+          </form>
+        </li>
+        <li class="nav-item" th:if="${!authenticated}">
+          <a class="btn btn-outline-dark" th:href="@{'/login'}">Sign in</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+</div>
+<div class="content-wrapper">
+  <div class="container">
+    <div th:if="${error}" class="alert alert-danger">
+      <span th:each="errorString : ${error}" th:text="${errorString}">Error message</span>
+    </div>
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card p-4">
+          <div class="card-body">
+            <h2 class="text-center mb-4">Category Form</h2>
+            <form th:if="${category.id == null || category.id == 0}" th:action="@{/categories/add}" method="post" th:object="${category}">
+              <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input id="name" th:field="*{name}" class="form-control" type="text" placeholder="Category name" required>
+              </div>
+              <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea id="description" th:field="*{description}" class="form-control" rows="4" placeholder="Category description"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Save</button>
+            </form>
+            <form th:if="${category.id != null && category.id != 0}" th:action="@{/categories/edit/{id}(id=${category.id})}" method="post" th:object="${category}">
+              <div class="mb-3">
+                <input type="hidden" th:field="*{id}" />
+                <label for="editName" class="form-label">Name</label>
+                <input id="editName" th:field="*{name}" class="form-control" type="text" placeholder="Category name" required>
+              </div>
+              <div class="mb-3">
+                <label for="editDescription" class="form-label">Description</label>
+                <textarea id="editDescription" th:field="*{description}" class="form-control" rows="4" placeholder="Category description"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Save</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:fragment="pageTitle">Default Title</title>
+    <script src="/webjars/jquery/3.7.1/jquery.min.js"></script>
+    <script src="/webjars/bootstrap/5.3.3/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/webjars/bootstrap/5.3.3/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/webjars/font-awesome/6.5.2/css/all.min.css"/>
+</head>
+<body>
+<div class="container">
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+        <a class="navbar-brand" th:href="@{'/books'}">
+            <i class="fas fa-home mx-1"></i> Carti
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{'/books'}">Carti</a>
+                </li>
+                <li th:if="${authenticated}" class="nav-item">
+                    <a class="nav-link" th:href="@{'/rentals'}">Imprumuturi</a>
+                </li>
+                <li class="nav-item" th:if="${authenticated && currentUserRole != 'client'}">
+                    <a class="nav-link" th:href="@{'/users'}">Utilizatori</a>
+                </li>
+                <li th:if="${authenticated}" class="nav-item">
+                    <a th:href="@{/users/profile}" class="nav-link">Profil</a>
+                </li>
+                <li th:if="${authenticated}" class="nav-item">
+                    <form th:action="@{/logout}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-dark btn-sm">Logout</button>
+                    </form>
+                </li>
+                <li th:if="${!authenticated}" class="nav-item">
+                    <a class="btn btn-dark btn-sm text-white" th:href="@{/login}">Sign in</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</div>
+
+<!-- Content Placeholder -->
+<div class="container" th:fragment="content"></div>
+
+</body>
+</html>

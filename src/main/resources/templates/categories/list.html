@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Categories</title>
+    <script src="/webjars/jquery/3.7.1/jquery.min.js"></script>
+    <script src="/webjars/bootstrap/5.3.3/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/webjars/bootstrap/5.3.3/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/webjars/font-awesome/6.5.2/css/all.min.css"/>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" th:href="@{'/home'}">
+            <i class="fas fa-book"></i> Library
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{'/books'}">Books</a>
+                </li>
+                <li class="nav-item" th:if="${authenticated}">
+                    <a class="nav-link" th:href="@{'/rentals'}">Rentals</a>
+                </li>
+                <li class="nav-item" th:if="${authenticated && currentUserRole != 'client'}">
+                    <a class="nav-link" th:href="@{'/users'}">Users</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{'/categories'}">Categories</a>
+                </li>
+                <li class="nav-item" th:if="${authenticated}">
+                    <a class="nav-link" th:href="@{'/users/profile'}">Profile</a>
+                </li>
+                <li class="nav-item" th:if="${authenticated}">
+                    <form th:action="@{'/logout'}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-dark">Logout</button>
+                    </form>
+                </li>
+                <li class="nav-item" th:if="${!authenticated}">
+                    <a class="btn btn-outline-dark" th:href="@{'/login'}">Sign in</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+</div>
+<div class="content-wrapper">
+    <div class="container">
+        <div th:if="${error}" class="alert alert-danger">
+            <span th:text="${error}">Error message</span>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card p-4">
+                    <div class="card-body">
+                        <h2 class="text-center mb-4">Categories</h2>
+                        <a href="/categories/add" class="btn btn-success mb-3" th:if="${currentUserRole == 'admin'}">Add category</a>
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th th:if="${currentUserRole == 'admin'}">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="category : ${categories}">
+                                <td>
+                                    <a th:href="@{'/categories/' + ${category.id}}" th:text="${category.name}" style="text-decoration: none" class="text-secondary">Category</a>
+                                </td>
+                                <td th:text="${category.description}">Description</td>
+                                <td th:if="${currentUserRole == 'admin'}">
+                                    <a th:href="@{'/categories/edit/' + ${category.id}}" class="btn btn-warning text-white">Edit</a>
+                                    <form th:action="@{'/categories/delete/' + ${category.id}}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

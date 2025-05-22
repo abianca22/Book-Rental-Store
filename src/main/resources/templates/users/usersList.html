@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Users List</title>
+    <script src="/webjars/jquery/3.7.1/jquery.min.js"></script>
+    <script src="/webjars/bootstrap/5.3.3/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/webjars/bootstrap/5.3.3/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/webjars/font-awesome/6.5.2/css/all.min.css"/>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" th:href="@{'/home'}">
+                <i class="fas fa-book"></i> Library
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{'/books'}">Books</a>
+                    </li>
+                    <li class="nav-item" th:if="${authenticated}">
+                        <a class="nav-link" th:href="@{'/rentals'}">Rentals</a>
+                    </li>
+                    <li class="nav-item" th:if="${authenticated && currentUserRole != 'client'}">
+                        <a class="nav-link" th:href="@{'/users'}">Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{'/categories'}">Categories</a>
+                    </li>
+                    <li class="nav-item" th:if="${authenticated}">
+                        <a class="nav-link" th:href="@{'/users/profile'}">Profile</a>
+                    </li>
+                    <li class="nav-item" th:if="${authenticated}">
+                        <form th:action="@{'/logout'}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-outline-dark">Logout</button>
+                        </form>
+                    </li>
+                    <li class="nav-item" th:if="${!authenticated}">
+                        <a class="btn btn-outline-dark" th:href="@{'/login'}">Sign in</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
+<div class="content-wrapper">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <div class="card p-4">
+                    <div class="card-body">
+                        <h2 class="text-center mb-4">Users List</h2>
+                        <form th:action="@{/users}" method="get" class="row g-3 mb-4">
+                            <div class="col-md-3">
+                                <input type="text" name="keyword" class="form-control" placeholder="Search by text"
+                                       th:value="${keyword}">
+                            </div>
+                            <div class="col-md-2">
+                                <select name="role" class="form-select">
+                                    <option th:value="__${null}__" th:selected="${role == null}">All</option>
+                                    <option th:each="roleOpt : ${roles}"
+                                            th:value="${roleOpt.id}" th:selected="${role == roleOpt.id}" th:text="${roleOpt.name}">Option</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">Filter</button>
+                            </div>
+                            <div class="col-md-2">
+                                <a th:href="@{/users}" class="btn btn-secondary w-100">Reset</a>
+                            </div>
+                        </form>
+                        <table class="table table-hover">
+                            <thead class="thead-inverse">
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Last Name</th>
+                                <th>First Name</th>
+                                <th>Role</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="user, stat : ${userPage.content}"
+                                th:class="${stat.odd}? 'table-light':''">
+                                <td th:text="${user.id}">ID</td>
+                                <td th:text="${user.username}">Username</td>
+                                <td th:text="${user.email}">Email</td>
+                                <td th:text="${user.phone}">Phone</td>
+                                <td th:text="${user.lastname}">Last Name</td>
+                                <td th:text="${user.firstname}">First Name</td>
+                                <td th:text="${user.role.name}">Role</td>
+                                <td>
+                                    <a class="btn btn-warning text-white" th:href="@{/users/edit/{id}(id=${user.id})}" th:if="${currentUserRole == 'admin' && currentUserId != user.id}">Change Role</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <nav th:if="${userPage.totalPages > 0}" aria-label="Pagination">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item" th:if="${currentPage > 1}">
+                                    <a class="page-link"
+                                       th:href="@{/users(size=${userPage.size}, page=${currentPage - 1}, keyword=${keyword}, role=${role})}">
+                                        Previous
+                                    </a>
+                                </li>
+                                <li th:each="pageNumber : ${#numbers.sequence(1, T(java.lang.Math).min(7, userPage.totalPages))}"
+                                    th:class="${pageNumber == currentPage} ? 'page-item active' : 'page-item'">
+                                    <a class="page-link"
+                                       th:text="${pageNumber}"
+                                       th:href="@{/users(size=${userPage.size}, page=${pageNumber}, keyword=${keyword}, role=${role})}">
+                                    </a>
+                                </li>
+                                <li class="page-item" th:if="${userPage.totalPages > 6}">
+                                    <a class="page-link" href="#">...</a>
+                                </li>
+                                <li class="page-item" th:if="${currentPage < userPage.totalPages}">
+                                    <a class="page-link"
+                                       th:href="@{/users(size=${userPage.size}, page=${currentPage + 1}, keyword=${keyword}, role=${role})}">
+                                        Next
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
