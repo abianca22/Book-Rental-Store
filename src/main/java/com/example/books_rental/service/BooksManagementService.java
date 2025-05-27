@@ -79,7 +79,7 @@ public class BooksManagementService {
         if (book.getDescription() != null) {
             foundBook.setDescription(book.getDescription());
         }
-        if (categories != null && !categories.isEmpty()) {
+        if (categories != null) {
             foundBook.setCategories(categories);
         }
         if (book.isStatus() != foundBook.isStatus()) {

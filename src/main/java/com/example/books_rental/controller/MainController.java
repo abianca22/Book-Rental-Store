@@ -90,6 +90,6 @@ public class MainController {
             return "register";
         }
         log.info("User registered successfully: {}", userDTO.getUsername());
-        return "redirect:/login?registered";
+        return "redirect:/login?created";
     }
 }

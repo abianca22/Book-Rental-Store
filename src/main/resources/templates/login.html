@@ -67,7 +67,7 @@
                 <div class="card p-4">
                     <div class="card-body">
                         <h2 class="text-center mb-4">Sign In</h2>
-                        <p th:if="${param.registered}" class="text-success text-center">Account created successfully. Please log in.</p>
+                        <p th:if="${param.created}" class="text-success text-center">Account created successfully. Please log in.</p>
                         <p th:if="${param.error}" class="text-danger text-center">Invalid username or password.</p>
                         <form class="form-signin" method="post" th:action="perform_login">
                             <div class="mb-3">
