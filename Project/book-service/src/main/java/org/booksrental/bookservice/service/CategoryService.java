@@ -1,5 +1,7 @@
 package org.booksrental.bookservice.service;
 
+import org.booksrental.bookservice.config.AuthorityCheck;
+import org.booksrental.bookservice.exception.AccessDeniedException;
 import org.booksrental.bookservice.exception.ExistingDataException;
 import org.booksrental.bookservice.exception.NotFoundException;
 import org.booksrental.bookservice.model.entity.Category;
@@ -18,30 +20,33 @@ public class CategoryService {
 
     private final BookRepository bookRepository;
 
+    private final AuthorityCheck authorityCheck;
+
     public CategoryService(CategoryRepository categoryRepository,
-                           BookRepository bookRepository) {
+                           BookRepository bookRepository,
+                           AuthorityCheck authorityCheck) {
         this.categoryRepository = categoryRepository;
         this.bookRepository = bookRepository;
+        this.authorityCheck = authorityCheck;
     }
 
-    public Category addCategory(Category category) {
+    public Category addCategory(Category category, String token) {
         Optional<Category> alreadyExistingCategory = categoryRepository.findByName(category.getName());
-//        if(user.getRole().getName().equals("client")) {
-//            throw new AccessDeniedException("Categories can only be added by staff members!");
-//        }
+        if(authorityCheck.getCurrentUser(token).getRole().equals("client")) {
+            throw new AccessDeniedException("Categories can only be added by staff members!");
+        }
         if (alreadyExistingCategory.isPresent()) {
             throw new ExistingDataException("Category with name " + category.getName() + " already exists!");
         }
         return categoryRepository.save(category);
     }
 
-    public Category updateCategory(Category category) {
+    public Category updateCategory(Category category, String token) {
         Optional<Category> foundCategoryById = categoryRepository.findById(category.getId());
         Optional<Category> foundCategoryByName = categoryRepository.findByName(category.getName());
-//        User user = authenticationService.getCurrentUser();
-//        if (user.getRole().getName().equals("client")) {
-//            throw new AccessDeniedException("Categories can only be updated by staff members!");
-//        }
+        if (authorityCheck.getCurrentUser(token).getRole().equals("client")) {
+            throw new AccessDeniedException("Categories can only be updated by staff members!");
+        }
         if (foundCategoryById.isEmpty()) {
             throw new NotFoundException("Category with id " + category.getId() + " does not exist!");
         }
@@ -58,12 +63,11 @@ public class CategoryService {
         return categoryRepository.save(foundCategoryById.get());
     }
 
-    public void deleteCategory(int id) {
-//        User user = authenticationService.getCurrentUser();
+    public void deleteCategory(int id, String token) {
         Optional<Category> category = categoryRepository.findById(id);
-//        if (user.getRole().getName().equals("client")) {
-//            throw new AccessDeniedException("Categories can only be deleted by staff members!");
-//        }
+        if (authorityCheck.getCurrentUser(token).getRole().equals("client")) {
+            throw new AccessDeniedException("Categories can only be deleted by staff members!");
+        }
         if (category.isEmpty()) {
             throw new NotFoundException("Category with id " + id + " does not exist!");
         }
@@ -89,9 +93,9 @@ public class CategoryService {
         return categoryRepository.findAll();
     }
 
-    public void deleteAllCategories() {
+    public void deleteAllCategories(String token) {
         for (var cat: categoryRepository.findAll()) {
-            deleteCategory(cat.getId());
+            deleteCategory(cat.getId(), token);
         }
     }
 

@@ -18,7 +18,6 @@ public class JwtUtil {
 
     public boolean validateToken(String token) {
         try {
-            System.out.println("Validating token: " + token);
             extractAllClaims(token);
             return !extractClaim(token, Claims::getExpiration).before(new Date());
         } catch (Exception e) {
@@ -27,9 +26,7 @@ public class JwtUtil {
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        System.out.println("Extracting claim from token: " + token);
         final Claims claims = extractAllClaims(token);
-        System.out.println("Claims extracted: " + claims);
         return claimsResolver.apply(claims);
     }
 
@@ -42,7 +39,6 @@ public class JwtUtil {
     }
 
     public String extractUsername(String token) {
-        System.out.println("Extracting username from token: " + token);
         return Jwts.parserBuilder().setSigningKey(SECRET_KEY)
                 .build()
                 .parseClaimsJws(token)

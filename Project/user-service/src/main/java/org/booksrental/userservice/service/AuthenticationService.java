@@ -55,7 +55,7 @@ public class AuthenticationService implements UserDetailsService {
 
     public User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        System.out.println("Current user: " + username);
+        log.info("Current user: {}", username);
         return userRepository.findUserByUsername(username)
                 .orElse(null);
     }

@@ -3,6 +3,7 @@ package org.booksrental.bookservice.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.booksrental.bookservice.model.dto.CreateCategoryDTO;
 import org.booksrental.bookservice.model.dto.UpdateBookDTO;
@@ -28,25 +29,25 @@ public class CategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<Category> create(@RequestBody @Valid CreateCategoryDTO createCategoryDto) {
+    public ResponseEntity<Category> create(@RequestBody @Valid CreateCategoryDTO createCategoryDto, HttpServletRequest request) {
         Category category = categoryMapper.toCategory(createCategoryDto);
-        Category createdCategory = categoryService.addCategory(category);
+        Category createdCategory = categoryService.addCategory(category, getToken(request));
         return ResponseEntity.created(URI.create("/categories/" + createdCategory.getId()))
                 .body(category);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Category> update(@PathVariable Integer id, @RequestBody @Valid UpdateCategoryDTO updateCategoryDto){
+    public ResponseEntity<Category> update(@PathVariable Integer id, @RequestBody @Valid UpdateCategoryDTO updateCategoryDto, HttpServletRequest request) {
         if (!id.equals(updateCategoryDto.getId())) {
             throw new IllegalArgumentException("Category ID in the path does not match the ID in the request body.");
         }
         Category category = categoryMapper.toCategory(updateCategoryDto);
-        return ResponseEntity.ok().body(categoryService.updateCategory(category));
+        return ResponseEntity.ok().body(categoryService.updateCategory(category, getToken(request)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable Integer id) {
-        categoryService.deleteCategory(id);
+    public ResponseEntity<String> delete(@PathVariable Integer id, HttpServletRequest request) {
+        categoryService.deleteCategory(id, getToken(request));
         return ResponseEntity.ok().body("Category with id " + id + " was deleted successfully!");
     }
 
@@ -58,6 +59,14 @@ public class CategoryController {
     @GetMapping("/all")
     public ResponseEntity<List<Category>> getAll() {
         return ResponseEntity.ok().body(categoryService.getAllCategories());
+    }
+
+    String getToken(HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            return token.substring(7);
+        }
+        return null;
     }
 }
 

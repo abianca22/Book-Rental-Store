@@ -13,7 +13,6 @@ import org.booksrental.rentalservice.service.RentalService;
 
 import org.booksrental.rentalservice.service.UserService;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

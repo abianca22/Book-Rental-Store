@@ -30,7 +30,7 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.GET, "/books/*").permitAll()
                         .pathMatchers("/books/rent/**").hasAnyRole("employee", "admin")
                         .pathMatchers("/categories/**").hasRole("admin")
-                        .pathMatchers("/rentals").hasAnyRole("client", "employee", "admin")
+                        .pathMatchers("/rentals/all", "rentals/editClient/**").hasAnyRole("client", "employee", "admin")
                         .pathMatchers("/rentals/deleteUser/**").hasAnyRole("employee", "admin", "client")
                         .pathMatchers("/rentals/**").hasAnyRole("employee", "admin")
                         .pathMatchers("/returns/deleteUser/**").hasAnyRole("employee", "admin", "client")

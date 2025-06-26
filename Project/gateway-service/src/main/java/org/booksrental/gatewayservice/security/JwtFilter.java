@@ -29,7 +29,6 @@ public class JwtFilter implements WebFilter {
         String path = exchange.getRequest().getURI().getPath();
 
         if (path.startsWith("/auth") || (path.startsWith("/books") && !path.contains("delete") && !path.contains("form") && !path.contains("rent")) || (path.startsWith("/categories") && exchange.getRequest().getMethod().name().equals("GET")) || path.startsWith("/usersTest") || path.startsWith("/booksTest") || path.startsWith("/rentalsTest") || path.startsWith("/actuator")) {
-            System.out.println(path);
             return chain.filter(exchange);
         }
 
@@ -50,11 +49,9 @@ public class JwtFilter implements WebFilter {
         String username = jwtUtil.extractUsername(jwt);
         String role = jwtUtil.extractClaim(jwt, claims -> claims.get("role", String.class));
         if (username == null || role == null) {
-            System.out.println(username + " " + role);
             exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
             return exchange.getResponse().setComplete();
         }
-        System.out.println("Username: " + username + ", Role: " + role);
 
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                 username,
